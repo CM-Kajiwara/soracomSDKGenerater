@@ -1,0 +1,52 @@
+{
+  "name": "swagger-js-codegen-soracom",
+  "main": "./lib/codegen.js",
+  "version": "1.1.5",
+  "description": "A Swagger codegen for JavaScript",
+  "private": true,
+  "scripts": {
+    "test": "grunt"
+  },
+  "bugs": {
+    "url": "https://github.com/wcandillon/swagger-js-codegen/issues"
+  },
+  "keywords": [
+    "swagger",
+    "rest"
+  ],
+  "author": {
+    "name": "William Candillon",
+    "email": "w@28.io",
+    "url": "http://28.io"
+  },
+  "licenses": [
+    {
+      "type": "Apache 2",
+      "url": "https://github.com/wcandillon/swagger-js-codegen/blob/master/LICENSE"
+    }
+  ],
+  "homepage": "https://github.com/wcandillon/swagger-js-codegen",
+  "dependencies": {
+    "js-beautify": "~1.5.1",
+    "jshint": "~2.5.1",
+    "lodash": "^2.4.1",
+    "mustache": "^2.0.0"
+  },
+  "devDependencies": {
+    "grunt": "~0.4.4",
+    "grunt-contrib-jshint": "~0.9.2",
+    "grunt-vows": "~0.4.1",
+    "q": "~1.0.1",
+    "final-fs": "~1.6.0",
+    "matchdep": "~0.3.0",
+    "vows": "~0.7.0",
+    "grunt-jsonlint": "~1.0.4",
+    "request": "~2.40.0"
+  },
+  "readme": "#Swagger to JS Codegen\n[![Build Status](http://img.shields.io/travis/wcandillon/swagger-js-codegen/master.svg?style=flat)](https://travis-ci.org/wcandillon/swagger-js-codegen) [![NPM version](http://img.shields.io/npm/v/swagger-js-codegen.svg?style=flat)](http://badge.fury.io/js/swagger-js-codegen) [![Code Climate](http://img.shields.io/codeclimate/github/wcandillon/swagger-js-codegen.svg?style=flat)](https://codeclimate.com/github/wcandillon/swagger-js-codegen)\n\nThis package generates a nodejs or angularjs class from a [swagger specification file](https://github.com/wordnik/swagger-spec). The code is generated using [mustache templates](https://github.com/wcandillon/swagger-js-codegen/tree/master/lib/templates) and is quality checked by [jshint](https://github.com/jshint/jshint/) and beautified by [js-beautify](https://github.com/beautify-web/js-beautify).\n\n##Installation\n```bash\nnpm install swagger-js-codegen\n```\n\n##Example\n```javascript\nvar fs = require('fs');\nvar CodeGen = require('swagger-js-codegen').CodeGen;\n\nvar file = 'swagger/spec.json';\nvar swagger = JSON.parse(fs.readFileSync(file, 'UTF-8'));\nvar nodejsSourceCode = CodeGen.getNodeCode({ className: 'Test', swagger: swagger });\nvar angularjsSourceCode = CodeGen.getAngularCode({ className: 'Test', swagger: swagger });\nconsole.log(nodejsSourceCode);\nconsole.log(angularjsSourceCode);\n```\n\n##Custom template\n```javascript\nvar source = CodeGen.getCustomCode({\n    moduleName: 'Test',\n    className: 'Test',\n    swagger: swaggerSpec,\n    template: {\n        class: fs.readFileSync('my-class.mustache', 'utf-8'),\n        method: fs.readFileSync('my-method.mustache', 'utf-8'),\n        request: fs.readFileSync('my-request.mustache', 'utf-8')\n    }\n});\n```\n\n##Options\nIn addition to the common options listed below, `getCustomCode()` *requires* a `template` field:\n\n    template: { class: \"...\", method: \"...\", request: \"...\" }\n\n`getAngularCode()`, `getNodeCode()`, and `getCustomCode()` each support the following options:\n\n```yaml\n  moduleName:\n    type: string\n    description: Your AngularJS module name\n  className:\n    type: string\n  lint:\n    type: boolean\n    description: whether or not to run jslint on the generated code\n  esnext:\n    type: boolean\n    description: passed through to jslint\n  beautify:\n    type: boolean\n    description: whether or not to beautify the generated code\n  mustache:\n    type: object\n    description: See the 'Custom Mustache Variables' section below\n  swagger:\n    type: object\n    required: true\n    properties:\n      swagger:\n        description: |\n          For Swagger Specification version 2.0 value of field 'swagger' must be a string '2.0'\n        type: string\n        enum:\n        - 2.0\n        - 1.2\n      info:\n        type: object\n        properties:\n          description:\n            type: string\n            description: Made available to templates as '{{&description}}'\n      securityDefinitions:\n        type: object\n        description:\n      parameters:\n        type: array\n        items:\n          type: object\n          properties:\n            name:\n              type: string\n              required: true\n            enum:\n              type: array\n            in:\n              type: string\n              enum:\n              - body\n              - path\n              - query\n              - header\n              - formData\n```\n\n###Template Variables\nThe following data are passed to the [mustache templates](https://github.com/janl/mustache.js):\n\n```yaml\nisNode:\n  type: boolean\ndescription:\n  type: string\n  description: Provided by your options field: 'swagger.info.description'\nisSecure:\n  type: boolean\n  description: false unless 'swagger.securityDefinitions' is defined\nmoduleName:\n  type: string\n  description: Your AngularJS module name - provided by your options field\nclassName:\n  type: string\n  description: Provided by your options field\ndomain:\n  type: string\n  description: If all options defined: swagger.schemes[0] + '://' + swagger.host + swagger.basePath\nmethods:\n  type: array\n  items:\n    type: object\n    properties:\n      path:\n        type: string\n      className:\n        type: string\n        description: Provided by your options field\n      methodName:\n        type: string\n        description: Generated from the HTTP method and path elements or 'x-swagger-js-method-name' field\n      method:\n        type: string\n        description: 'GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'COPY', 'HEAD', 'OPTIONS', 'LINK', 'UNLIK', 'PURGE', 'LOCK', 'UNLOCK', 'PROPFIND'\n        enum:\n        - GET\n        - POST\n        - PUT\n        - DELETE\n        - PATCH\n        - COPY\n        - HEAD\n        - OPTIONS\n        - LINK\n        - UNLIK\n        - PURGE\n        - LOCK\n        - UNLOCK\n        - PROPFIND\n      isGET:\n        type: string\n        description: true if method === 'GET'\n      summary:\n        type: string\n        description: Provided by the 'description' field in the schema\n      isSecure:\n        type: boolean\n        description: true if the 'security' is defined for the method in the schema\n      parameters:\n        type: array\n        description: Includes all of the properties defined for the parameter in the schema plus:\n        items:\n          camelCaseName:\n            type: string\n          isSingleton:\n            type: boolean\n            description: true if there was only one 'enum' defined for the parameter\n          singleton:\n            type: string\n            description: the one and only 'enum' defined for the parameter (if there is only one)\n          isBodyParameter:\n            type: boolean\n          isPathParameter:\n            type: boolean\n          isQueryParameter:\n            type: boolean\n          isPatternType:\n            type: boolean\n            description: true if *in* is 'query', and 'pattern' is defined\n          isHeaderParameter:\n            type: boolean\n          isFormParameter:\n            type: boolean\n```\n\n####Custom Mustache Variables\nYou can also pass in your own variables for the mustache templates by adding a `mustache` object:\n\n```javascript\nvar source = CodeGen.getCustomCode({\n    ...\n    mustache: {\n      foo: 'bar',\n      app_build_id: env.BUILD_ID,\n      app_version: pkg.version\n    }\n});\n```\n\n##Swagger Extensions\n\n### x-swagger-js-method-name\nBy default, javascript method names are generated by concatenating the HTTP method name and path segments.\nGenerally, the generated names read well, but sometimes they turn out wrong:\n\n```javascript\n// A PUT to this path in a swagger schema:  /records/{id}/meta\n// is intended to update a \"meta\" property on a specific \"Record\" entity.\n// ...swagger-js-codegen generates a method named:\nMyApi.prototype.putEntitiesByIdMeta = function(parameters) {\n```\n\nIf you would like to provide your own method names, use the `x-swagger-js-method-name` field at the method level\n\n```yaml\n  /records/{id}/meta:\n    put:\n      x-swagger-js-method-name: updateRecordMetaData\n      parameters:\n      - name: id\n       in: path\n       ...\n```\n\n### x-proxy-header\nSome proxies and application servers inject HTTP headers into the requests.  Server-side code\nmay use these fields, but they are not required in the client API.\n\neg: https://cloud.google.com/appengine/docs/go/requests#Go_Request_headers\n\n```yaml\n  /locations:\n    get:\n      parameters:\n      - name: X-AppEngine-Country\n        in: header\n        x-proxy-header: true\n        type: string\n        description: Provided by AppEngine eg - US, AU, GB\n      - name: country\n        in: query\n        type: string\n        description: |\n          2 character country code.\n          If not specified, will default to the country provided in the X-AppEngine-Country header\n      ...\n```\n\n\n## Grunt & Gulp task\n[There is a grunt task](https://github.com/wcandillon/grunt-swagger-js-codegen) that enables you to integrate the code generation in your development pipeline. This is extremely convenient if your application is using APIs which are documented/specified in the swagger format.\n\nAnd example of gulp task is available [here](https://github.com/28msec/cellstore/blob/master/tasks/swagger.js).\n\n##Who is using it?\nThe [CellStore](https://github.com/wcandillon/cellstore) project.\n\n[28.io](http://28.io) is using this project to generate their [nodejs](https://github.com/28msec/28.io-nodejs) and [angularjs language bindings](https://github.com/28msec/28.io-angularjs).\n",
+  "readmeFilename": "README.md",
+  "_id": "swagger-js-codegen@1.1.5",
+  "dist": {
+    "shasum": "fdbc4933b61e6c3d01eda232a3579a257d30ac42"
+  }
+}
